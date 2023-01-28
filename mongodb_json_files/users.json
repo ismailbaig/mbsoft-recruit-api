@@ -1,0 +1,25 @@
+[{
+  "name": "millio1",
+  "email": "millio1@gmail.com",
+  "password": "millio@1111",
+  "id": 1,
+  "role": "ADMIN"
+},{
+  "name": "millio2",
+  "email": "millio2@gmail.com",
+  "password": "millio@2222",
+  "id": 2,
+  "role": "ADVISOR"
+},{
+  "name": "millio3",
+  "email": "millio3@gmail.com",
+  "password": "millio@3333",
+  "id": 3,
+  "role": "CRL"
+},{
+  "name": "millio4",
+  "email": "millio4@gmail.com",
+  "password": "millio@4444",
+  "id": 4,
+  "role": "TAL"
+}]
