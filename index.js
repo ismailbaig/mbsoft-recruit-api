@@ -40,7 +40,7 @@ app.set("view engine", "ejs")
 
 //Application Routes - Start
 app.post("/login", (req, res) => {
-    const { uid, pd } = req.query;
+    const { uid, pd } = req.body;
     Users.findOne({ name: uid, password: pd }, (err, user) => {
         if (err) {
             res.status(500).json({
