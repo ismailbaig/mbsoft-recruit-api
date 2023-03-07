@@ -6,9 +6,14 @@ import { options } from "./options.js";
 import multer from "multer";
 import path from "path";
 import sgMail from "@sendgrid/mail";
+import bodyParser from "body-parser";
+// config.js
+import dotenv from "dotenv";
+dotenv.config({ silent: process.env.NODE_ENV === 'production' });
 
 const app = express();
 app.use(express.json());
+app.use(bodyParser.json());
 app.use(express.urlencoded());
 app.use(cors());
 
@@ -28,7 +33,7 @@ app.use(cors());
 
 /* MongoDB server */
 mongoose.connect(
-  "mongodb+srv://baigece2007:28u8qjrG5IvxTbCV@milliomongocluster1.orbrtyq.mongodb.net/mbsoftrecruitcollection",
+  process.env.LOCAL_MONGO_URL,
   {
     useNewUrlparser: true,
     useunifiedTopology: true,
@@ -57,7 +62,8 @@ app.set("view engine", "ejs");
 
 //Application Routes - Start
 app.post("/login", (req, res) => {
-  const { uid, pd } = req.query;
+  console.log(req.body);
+  const { uid, pd } = req.body;
   try {
     Users.findOne({ name: uid, password: pd }, (err, user) => {
       if (err) {
@@ -79,10 +85,12 @@ app.post("/login", (req, res) => {
         res.status(200).json({
           message: "Login Successful",
           jwtoken: "Bearer " + token,
+          database: process.env.LOCAL_MONGO_URL
         });
       } else {
         res.status(401).json({
           message: "Login Failed 2",
+          databaseConnected: process.env.LOCAL_MONGO_URL
         });
       }
     });
@@ -270,14 +278,35 @@ function verifyToken(req, res, next) {
 }
 
 app.get("/test", (req, res) => {
-  const isoString = new Date().toISOString();
-  const date = new Date(isoString);
-  const americanDate = new Intl.DateTimeFormat("en-GB", options).format(date);
-  res.send("Info: Ismail mongo !! " + americanDate.replace(/:/g, "-"));
+  res.send( `Test`);
 });
 
-app.listen(8080, () => {
+app.get("/healtcheck", (req, res) => {
+  const options = { dateStyle: "full", timeStyle: "long", timeZone: "IST" };
+  const isoString = new Date().toISOString();
+  const date = new Date(isoString);
+  const indianDateTime = new Intl.DateTimeFormat("en-GB", options).format(date);
+  res.send( `Health check of MBSoft API is good at 
+  ${indianDateTime.replace(/:/g, "-")}`);
+});
+
+app.get("/getinfo", (req, res) => {
+  const options = { dateStyle: "full", timeStyle: "long", timeZone: "IST" };
+  const isoString = new Date().toISOString();
+  const date = new Date(isoString);
+  const indianDateTime = new Intl.DateTimeFormat("en-GB", options).format(date);
+  res.send( `Info: Mongodb used is : Ismail mongo !! 
+  deployed at India Time
+  ${indianDateTime.replace(/:/g, "-")}`);
+});
+
+const PORT = process.env.PORT || 9600;
+app.listen(9600, () => {
   console.log(
-    "hi from ISMAIL MONGO, port connectes successfully, Change this to 8080 before deployment , Local it is 9600!!"
+    `hi from ISMAIL MONGO, port connects successfully, 
+    Change this to 8080 before deployment , Local it is 9600!!`
   );
+  // console.log(`The value of PORT is: ${PORT}`);
+  console.log(`The value of Database URL from env file is: ${process.env.LOCAL_MONGO_URL}`);
+
 });
