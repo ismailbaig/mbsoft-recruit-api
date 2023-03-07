@@ -1,3 +1,15 @@
+/*
+ Befor Deploy to PROD:
+ 1. change req.quer to req.body every where
+ 2. Change PORT to 8080 from 9600
+ 3. Do Loggin properly like MongoDB and its messages properly
+      a. In Login End point
+      b. In Health check end point.
+      3. In PORT at the End etc.
+ 4. <To write in futuer>
+ 5. <To write in futuer>
+*/
+
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
@@ -59,7 +71,6 @@ const userRegisterSchema = new mongoose.Schema({
   name: String,
   email: String,
   password: String,
-  id: Number,
   mobile: Number,
   gender: String,
 });
@@ -76,8 +87,8 @@ app.set("view engine", "ejs");
 
 //Application Routes - Start
 app.post("/login", (req, res) => {
-  console.log(req.body);
-  const { uid, pd } = req.body;
+  console.log(req.query);
+  const { uid, pd } = req.query;
   try {
     Users.findOne({ name: uid, password: pd }, (err, user) => {
       if (err) {
@@ -144,9 +155,17 @@ app.post("/userregister", (req, res) => {
   console.log(req.query);
   const { name, email, password,mobile,gender } = req.query;
 
-  userRegister.findOne({ email: email }, (err, user) => {
-    if (user) {
-      res.send({ message: "User already exists" });
+  userRegister.find({ $or: [{name: name}, {email: email}, {mobile: mobile}] }, (err, user) => {
+    if (err) {
+      console.log(err);
+      res.status(500).json({
+        message: err,
+      });
+    } else if (user.length > 0) {
+      res.status(500).json({
+        Error: "Error",
+        message: "User already exists",
+      });
     } else {
       const user = new userRegister({
         name,
@@ -185,6 +204,9 @@ app.post('/deletereguserbyid',(req, res) => {
   (err, data) => {
       if(err){
           console.log(err);
+          res.status(500).json({
+            message: "Unable to delete registered user!!",
+          });
       }
       else{
           res.send(data);
@@ -197,7 +219,7 @@ app.post('/deletereguserbyid',(req, res) => {
 
 app.post("/updatereguser", (req, res) => {
   const { name, pd, gen } = req.query;
-  userRegister.updateMany({ name: name }, 
+  userRegister.updateOne({ name: name }, 
     { $set: { password: pd, gender:gen } },
     (err, data) => {
     if (err) {
