@@ -54,6 +54,20 @@ const userSchema = new mongoose.Schema({
 
 const Users = new mongoose.model("User", userSchema);
 
+//Register schema starts here
+const userRegisterSchema = new mongoose.Schema({
+  name: String,
+  email: String,
+  password: String,
+  id: Number,
+  mobile: Number,
+  gender: String,
+});
+
+const userRegister = new mongoose.model("Register", userRegisterSchema);
+
+
+//Register schema ends here
 // Mongoose Schema - End
 
 // View Engine Setup
@@ -123,6 +137,82 @@ app.post("/register", (req, res) => {
     }
   });
 });
+
+// New Register api
+
+app.post("/userregister", (req, res) => {
+  console.log(req.query);
+  const { name, email, password,mobile,gender } = req.query;
+
+  userRegister.findOne({ email: email }, (err, user) => {
+    if (user) {
+      res.send({ message: "User already exists" });
+    } else {
+      const user = new userRegister({
+        name,
+        email,
+        password,
+        mobile,
+        gender
+      });
+
+      user.save((err) => {
+        if (err) {
+          res.send(err);
+        } else {
+          res.send({ message: "User registered scuccessfully!!" });
+        }
+      });
+    }
+  });
+});
+
+// To get all items in register1
+app.get('/findallregusers',(req, res) => {
+  userRegister.find((err, data) => {
+      if(err){
+          console.log(err);
+      }
+      else{
+          res.send(data);
+      }
+  });  
+});
+
+// To delete the record in register
+app.post('/deletereguserbyid',(req, res) => {
+  userRegister.findByIdAndDelete((req.query.id), 
+  (err, data) => {
+      if(err){
+          console.log(err);
+      }
+      else{
+          res.send(data);
+          console.log("Data Deleted!");
+      }
+  });  
+});
+
+//To update the Register form
+
+app.post("/updatereguser", (req, res) => {
+  const { name, pd, gen } = req.query;
+  userRegister.updateMany({ name: name }, 
+    { $set: { password: pd, gender:gen } },
+    (err, data) => {
+    if (err) {
+      res.status(403).json({
+        message: "NOT Updated !!",
+      });
+    } else {
+      res.status(200).json({
+        updtedData: data,
+      });
+    }
+  });
+});
+
+
 
 //Application Routes - End
 
