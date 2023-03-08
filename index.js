@@ -1,13 +1,12 @@
 /*
  Befor Deploy to PROD:
- 1. change req.quer to req.body every where
- 2. Change PORT to 8080 from 9600
- 3. Do Loggin properly like MongoDB and its messages properly
+ 1. Change PORT to 8080 from 9600
+ 2. Do Loggin properly like MongoDB and its messages properly
       a. In Login End point
       b. In Health check end point.
       3. In PORT at the End etc.
+ 3. No Local reference should be present. All should be PROD 
  4. <To write in futuer>
- 5. <To write in futuer>
 */
 
 import express from "express";
@@ -30,22 +29,8 @@ app.use(express.urlencoded());
 app.use(cors());
 
 //mongoose.set("strictQuery", false);
-
-/* MongoDB Local */
-// mongoose.connect(
-//   "mongodb://127.0.0.1:27017/mbsoftrecruitdb",
-//   {
-//     useNewUrlparser: true,
-//     useunifiedTopology: true,
-//   },
-//   () => {
-//     console.log("Local mongo (mbsoft recruit) db connected!!");
-//   }
-// );
-
-/* MongoDB server */
 mongoose.connect(
-  process.env.LOCAL_MONGO_URL,
+  process.env.LOCAL_MONGO_DB_URL,
   {
     useNewUrlparser: true,
     useunifiedTopology: true,
@@ -73,6 +58,8 @@ const userRegisterSchema = new mongoose.Schema({
   password: String,
   mobile: Number,
   gender: String,
+  createddate: String,
+  updateddate: String,
 });
 
 const userRegister = new mongoose.model("Register", userRegisterSchema);
@@ -87,8 +74,14 @@ app.set("view engine", "ejs");
 
 //Application Routes - Start
 app.post("/login", (req, res) => {
-  console.log(req.query);
+  // FOR PROD and POSTMAN
+  console.log(req.query);  
   const { uid, pd } = req.query;
+
+  //  LOCAL REACT
+  // console.log(req.body); 
+  // const { uid, pd } = req.body; 
+
   try {
     Users.findOne({ name: uid, password: pd }, (err, user) => {
       if (err) {
@@ -110,12 +103,10 @@ app.post("/login", (req, res) => {
         res.status(200).json({
           message: "Login Successful",
           jwtoken: "Bearer " + token,
-          database: process.env.LOCAL_MONGO_URL
         });
       } else {
         res.status(401).json({
           message: "Login Failed 2",
-          databaseConnected: process.env.LOCAL_MONGO_URL
         });
       }
     });
@@ -125,8 +116,13 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  console.log(req.query);
-  const { name, email, password } = req.query;
+  // FOR PROD and POSTMAN
+  console.log(req.query);  
+  const { name, email, password } = req.query; 
+
+  // LOCAL REACT
+  // console.log(req.body); 
+  // const { name, email, password } = req.body;  
 
   Users.findOne({ email: email }, (err, user) => {
     if (user) {
@@ -150,10 +146,15 @@ app.post("/register", (req, res) => {
 });
 
 // New Register api
-
 app.post("/userregister", (req, res) => {
+  // FOR PROD and POSTMAN
   console.log(req.query);
   const { name, email, password,mobile,gender } = req.query;
+
+
+  // LOCAL REACT
+  // console.log(req.body);
+  // const { name, email, password,mobile,gender } = req.body;
 
   userRegister.find({ $or: [{name: name}, {email: email}, {mobile: mobile}] }, (err, user) => {
     if (err) {
@@ -167,12 +168,15 @@ app.post("/userregister", (req, res) => {
         message: "User already exists",
       });
     } else {
+      var datetime = new Date();
       const user = new userRegister({
         name,
         email,
         password,
         mobile,
-        gender
+        gender,
+        createddate: datetime,
+        updateddate: datetime
       });
 
       user.save((err) => {
@@ -200,7 +204,9 @@ app.get('/findallregusers',(req, res) => {
 
 // To delete the record in register
 app.post('/deletereguserbyid',(req, res) => {
-  userRegister.findByIdAndDelete((req.query.id), 
+  
+  userRegister.findByIdAndDelete((req.query.id), // FOR PROD and POSTMAN
+  // userRegister.findByIdAndDelete((req.body.id),   // LOCAL REACT
   (err, data) => {
       if(err){
           console.log(err);
@@ -218,9 +224,11 @@ app.post('/deletereguserbyid',(req, res) => {
 //To update the Register form
 
 app.post("/updatereguser", (req, res) => {
-  const { name, pd, gen } = req.query;
+  const { name, pd, gen } = req.query;  // FOR PROD and POSTMAN
+  //const { name, pd, gen } = req.body;   // LOCAL REACT
+
   userRegister.updateOne({ name: name }, 
-    { $set: { password: pd, gender:gen } },
+    { $set: { password: pd, gender:gen, updateddate: new Date() } },
     (err, data) => {
     if (err) {
       res.status(403).json({
@@ -233,8 +241,6 @@ app.post("/updatereguser", (req, res) => {
     }
   });
 });
-
-
 
 //Application Routes - End
 
@@ -257,7 +263,8 @@ app.post("/testtoken", verifyToken, (req, res, next) => {
 
 // update pd using name
 app.post("/uppd", (req, res) => {
-  const { name, pd } = req.query;
+  const { name, pd } = req.query;  // // FOR PROD and POSTMAN
+  // const { name, pd } = req.body;   // LOCAL REACT
   Users.updateOne({ name: name }, { $set: { password: pd } }, (err, data) => {
     if (err) {
       res.status(403).json({
@@ -419,6 +426,6 @@ app.listen(9600, () => {
     Change this to 8080 before deployment , Local it is 9600!!`
   );
   // console.log(`The value of PORT is: ${PORT}`);
-  console.log(`The value of Database URL from env file is: ${process.env.LOCAL_MONGO_URL}`);
+  console.log(`The value of Database URL from env file is: ${process.env.LOCAL_MONGO_DB_URL}`);
 
 });
